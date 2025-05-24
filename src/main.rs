@@ -15,8 +15,8 @@ async fn main() -> Result<()> {
             Builder::new()
                 .name("external/tls")
                 .laddr(([0, 0, 0, 0], 8883).into())
-                .tls_key(Some("./bin/server.key"))
-                .tls_cert(Some("./bin/server.crt"))
+                .tls_key(Some("/etc/ssl/private/server.key"))
+                .tls_cert(Some("/etc/ssl/certs/server.crt"))
                 .tls_cross_certificate(false)
                 .bind()?
                 .tls()?,
