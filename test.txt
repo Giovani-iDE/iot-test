@@ -1,0 +1,97 @@
+use rumqttc::{Client, Event, Incoming, MqttOptions, QoS, TlsConfiguration, Transport};
+use rustls::{ClientConfig, RootCertStore};
+use rustls_pemfile::certs;
+use rustls_pki_types::CertificateDer;
+use std::fs::File;
+use std::io::BufReader;
+use std::sync::Arc;
+use std::time::Duration;
+use std::error::Error;
+
+fn main() -> Result<(), Box<dyn Error>> {
+    println!("🚀 Iniciando cliente MQTT con certificados correctos...");
+   
+    // ✅ CAMBIO: Leer el certificado de la CA (no el del servidor)
+    let cert_file = File::open("./bin/ca.crt")?;  // ← CAMBIO AQUÍ
+    let mut reader = BufReader::new(cert_file);
+    
+    // Leer certificados y convertir a CertificateDer
+    let certs_vec: Vec<CertificateDer<'static>> = certs(&mut reader)
+        .collect::<Result<Vec<_>, _>>()?;
+    
+    if certs_vec.is_empty() {
+        return Err("No se encontraron certificados en el archivo".into());
+    }
+    
+    println!("✅ Certificado CA cargado desde ./bin/ca.crt");
+    
+    // Crear RootCertStore y añadir el certificado de la CA
+    let mut root_cert_store = RootCertStore::empty();
+    for cert in certs_vec {
+        root_cert_store.add(cert)?;
+    }
+    
+    println!("✅ Certificado CA añadido al almacén de confianza");
+    
+    // Crear configuración TLS CON validación de certificados
+    let client_config = ClientConfig::builder()
+        .with_root_certificates(root_cert_store)
+        .with_no_client_auth();
+    
+    let tls_config = TlsConfiguration::Rustls(Arc::new(client_config));
+    println!("✅ Configuración TLS creada CON validación de certificados");
+    
+    // Configure MQTT options
+    let mut mqtt_options = MqttOptions::new("rust-mqtt-client", "192.168.18.22", 8883);
+    mqtt_options.set_transport(Transport::Tls(tls_config));
+    mqtt_options.set_keep_alive(Duration::from_secs(30));
+   
+    println!("✅ Opciones MQTT configuradas:");
+    println!("   - Host: 192.168.18.22");
+    println!("   - Puerto: 8883 (TLS)");
+    println!("   - Cliente ID: rust-mqtt-client");
+    println!("   - Validación de certificados: HABILITADA");
+    println!("   - CA de confianza: ./bin/ca.crt");
+    
+    let (client, mut connection) = Client::new(mqtt_options, 10);
+    println!("✅ Cliente MQTT creado");
+   
+    // Intentar suscribirse
+    match client.subscribe("esp32/sensors", QoS::AtLeastOnce) {
+        Ok(_) => println!("✅ Suscripción enviada al tópico: esp32/sensors"),
+        Err(e) => println!("❌ Error al suscribirse: {}", e),
+    }
+    
+    println!("🔌 Esperando mensajes...");
+    println!("🔐 Usando conexión TLS con validación REAL de certificados");
+    
+    for event in connection.iter() {
+        match event {
+            Ok(Event::Incoming(Incoming::Publish(p))) => {
+                println!("📩 {} => {}", p.topic, String::from_utf8_lossy(&p.payload));
+            }
+            Ok(Event::Incoming(Incoming::ConnAck(_))) => {
+                println!("✅ Conexión TLS establecida y certificado VALIDADO");
+            }
+            Ok(Event::Incoming(Incoming::SubAck(_))) => {
+                println!("✅ Suscripción confirmada");
+            }
+            Ok(Event::Incoming(Incoming::PingResp)) => {
+                println!("🏓 Ping response recibido");
+            }
+            Ok(Event::Outgoing(_)) => {
+                // Eventos salientes, no los mostramos para evitar spam
+            }
+            Ok(other) => {
+                println!("📨 Evento recibido: {:?}", other);
+            }
+            Err(e) => {
+                println!("❌ Error de conexión TLS: {}", e);
+                println!("💡 Verificar que el servidor esté usando los certificados correctos");
+                break;
+            }
+        }
+    }
+    
+    Ok(())
+}
