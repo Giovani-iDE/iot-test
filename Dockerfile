@@ -19,12 +19,11 @@ RUN cargo build --release
 # Etapa final
 FROM debian:bookworm-slim
 
-# Instalar dependencias y ngrok versión 3.x+
 RUN apt-get update && \
-    apt-get install -y curl ca-certificates libssl3 && \
-    curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz \
-    | tar -xz -C /usr/local/bin && \
-    chmod +x /usr/local/bin/ngrok && \
+    apt-get install -y \
+    openssh-client \
+    libssl3 \
+    ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # Copiar el binario compilado

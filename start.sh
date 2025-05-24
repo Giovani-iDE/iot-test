@@ -1,16 +1,12 @@
 #!/bin/bash
 
-# (Opcional) Añade tu authtoken si tienes uno
-ngrok authtoken 2xYyOdTgRRlAbD92cfwJO8NcPFF_mMP2JQJiyvxqtFWqFLb9
-
-# Iniciar el broker MQTT (ajusta si tu binario tiene otro nombre)
+# Iniciar broker MQTT
 echo "Iniciando broker MQTT..."
 /usr/local/bin/rust &
 
-# Esperar a que el broker se inicie
+# Esperar a que el broker inicie
 sleep 5
 
-# Iniciar túnel ngrok al puerto 8883
-echo "Iniciando túnel ngrok al puerto 8883..."
-ngrok tcp 8883 --log=stdout &
-wait
+# Abrir túnel TCP en Serveo hacia el puerto 8883 local
+echo "Iniciando túnel Serveo en el puerto 8883..."
+ssh -o StrictHostKeyChecking=no -R 0.0.0.0:8883:localhost:8883 serveo.net
