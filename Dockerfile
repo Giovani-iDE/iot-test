@@ -19,22 +19,29 @@ RUN cargo build --release
 # Etapa final
 FROM debian:bookworm-slim
 
+# Instalar ngrok y dependencias
 RUN apt-get update && \
-    apt-get install -y \
-    libssl3 \
-    ca-certificates && \
+    apt-get install -y wget unzip ca-certificates libssl3 && \
+    wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && \
+    unzip ngrok-stable-linux-amd64.zip && \
+    mv ngrok /usr/local/bin/ngrok && \
+    rm ngrok-stable-linux-amd64.zip && \
     rm -rf /var/lib/apt/lists/*
 
-# Copiar el binario
+# Copiar el binario compilado
 COPY --from=builder /usr/src/app/target/release/rust /usr/local/bin/rust
 
-# Copiar certificados a ubicaciones estándar con permisos adecuados
+# Copiar certificados TLS
 COPY --from=builder /usr/src/app/bin/server.crt /etc/ssl/certs/
 COPY --from=builder /usr/src/app/bin/ca.crt /etc/ssl/certs/
 COPY --from=builder /usr/src/app/bin/server.key /etc/ssl/private/
 RUN chmod 600 /etc/ssl/private/server.key && \
     chown root:root /etc/ssl/private/server.key
 
+# Copiar script de inicio
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 8883
 
-CMD ["/usr/local/bin/rust"]
+CMD ["/start.sh"]
