@@ -11,11 +11,12 @@ ST = Lima
 L  = Lima
 O  = IOT
 OU = server
-CN = 192.168.18.22
+CN = iot-test-production.up.railway.app
 
 [ req_ext ]
 subjectAltName = @alt_names
 
 [ alt_names ]
-IP.1  = 192.168.18.22
-DNS.1 = localhost
+DNS.1 = iot-test-production.up.railway.app
+DNS.2 = localhost
+IP.1  = 127.0.0.1
