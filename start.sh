@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # (Opcional) Añade tu authtoken si tienes uno
-# ngrok authtoken TU_AUTHTOKEN_AQUI
+ngrok authtoken 2xYyOdTgRRlAbD92cfwJO8NcPFF_mMP2JQJiyvxqtFWqFLb9
 
 # Iniciar el broker MQTT (ajusta si tu binario tiene otro nombre)
 echo "Iniciando broker MQTT..."
