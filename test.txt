@@ -137,3 +137,13 @@ RUN chmod 600 /etc/ssl/private/server.key && \
 EXPOSE 8883
 
 CMD ["/usr/local/bin/rust"]
+
+
+mosquitto_sub -h serveo.net -p 43980 --cafile /home/christian/Documents/Programing/Rust/rust/bin/ca.crt -t "test/topic" -d
+
+mosquitto_pub \
+  -h serveo.net -p 43980 \
+  --cafile /home/christian/Documents/Programing/Rust/rust/bin/ca.crt \
+  -t "sensor/data" \
+  -m '{"mq7_co":123,"mq135_no2":45,"dht11_temperature":22.5,"dht11_humidity":55.0,"timestamp":"2025-06-17T12:00:00Z"}' \
+  -d --insecure

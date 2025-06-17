@@ -9,7 +9,6 @@ async fn main() -> Result<()> {
 
     let scx = ServerContext::new().plugins_dir("plugins/").build().await;
 
-
     MqttServer::new(scx)
         .listener(
             Builder::new()
